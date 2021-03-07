@@ -1,0 +1,37 @@
+C:\Documents and Settings\1007805\my documents\visual studio 2010\Projects\Serial_Communication\Serial_Communication\bin\Debug\Serial_Communication.exe
+C:\Documents and Settings\1007805\my documents\visual studio 2010\Projects\Serial_Communication\Serial_Communication\bin\Debug\Serial_Communication.pdb
+C:\Documents and Settings\1007805\my documents\visual studio 2010\Projects\Serial_Communication\Serial_Communication\obj\x86\Debug\ResolveAssemblyReference.cache
+C:\Documents and Settings\1007805\my documents\visual studio 2010\Projects\Serial_Communication\Serial_Communication\obj\x86\Debug\Serial_Communication.Form1.resources
+C:\Documents and Settings\1007805\my documents\visual studio 2010\Projects\Serial_Communication\Serial_Communication\obj\x86\Debug\Serial_Communication.Properties.Resources.resources
+C:\Documents and Settings\1007805\my documents\visual studio 2010\Projects\Serial_Communication\Serial_Communication\obj\x86\Debug\GenerateResource.read.1.tlog
+C:\Documents and Settings\1007805\my documents\visual studio 2010\Projects\Serial_Communication\Serial_Communication\obj\x86\Debug\GenerateResource.write.1.tlog
+C:\Documents and Settings\1007805\my documents\visual studio 2010\Projects\Serial_Communication\Serial_Communication\obj\x86\Debug\Serial_Communication.exe
+C:\Documents and Settings\1007805\my documents\visual studio 2010\Projects\Serial_Communication\Serial_Communication\obj\x86\Debug\Serial_Communication.pdb
+C:\Users\Bindu\Downloads\New folder\Serial_Communication\bin\Debug\Serial_Communication.exe.config
+C:\Users\Bindu\Downloads\New folder\Serial_Communication\bin\Debug\Serial_Communication.exe
+C:\Users\Bindu\Downloads\New folder\Serial_Communication\bin\Debug\Serial_Communication.pdb
+C:\Users\Bindu\Downloads\New folder\Serial_Communication\obj\x86\Debug\Serial_Communication.Form1.resources
+C:\Users\Bindu\Downloads\New folder\Serial_Communication\obj\x86\Debug\Serial_Communication.Properties.Resources.resources
+C:\Users\Bindu\Downloads\New folder\Serial_Communication\obj\x86\Debug\Serial_Communication.csproj.GenerateResource.cache
+C:\Users\Bindu\Downloads\New folder\Serial_Communication\obj\x86\Debug\Serial_Communication.exe
+C:\Users\Bindu\Downloads\New folder\Serial_Communication\obj\x86\Debug\Serial_Communication.pdb
+C:\Users\Nick Price\OneDrive - CP Automation Ltd\Web\Serial Port Analyser\Serial-Port-Communication-Visual-Studio-Project\Serial_Communication\bin\Debug\Serial_Communication.exe.config
+C:\Users\Nick Price\OneDrive - CP Automation Ltd\Web\Serial Port Analyser\Serial-Port-Communication-Visual-Studio-Project\Serial_Communication\bin\Debug\Serial_Communication.exe
+C:\Users\Nick Price\OneDrive - CP Automation Ltd\Web\Serial Port Analyser\Serial-Port-Communication-Visual-Studio-Project\Serial_Communication\bin\Debug\Serial_Communication.pdb
+C:\Users\Nick Price\OneDrive - CP Automation Ltd\Web\Serial Port Analyser\Serial-Port-Communication-Visual-Studio-Project\Serial_Communication\obj\x86\Debug\Serial_Communication.csprojAssemblyReference.cache
+C:\Users\Nick Price\OneDrive - CP Automation Ltd\Web\Serial Port Analyser\Serial-Port-Communication-Visual-Studio-Project\Serial_Communication\obj\x86\Debug\Serial_Communication.Form1.resources
+C:\Users\Nick Price\OneDrive - CP Automation Ltd\Web\Serial Port Analyser\Serial-Port-Communication-Visual-Studio-Project\Serial_Communication\obj\x86\Debug\Serial_Communication.Properties.Resources.resources
+C:\Users\Nick Price\OneDrive - CP Automation Ltd\Web\Serial Port Analyser\Serial-Port-Communication-Visual-Studio-Project\Serial_Communication\obj\x86\Debug\Serial_Communication.csproj.GenerateResource.cache
+C:\Users\Nick Price\OneDrive - CP Automation Ltd\Web\Serial Port Analyser\Serial-Port-Communication-Visual-Studio-Project\Serial_Communication\obj\x86\Debug\Serial_Communication.csproj.CoreCompileInputs.cache
+C:\Users\Nick Price\OneDrive - CP Automation Ltd\Web\Serial Port Analyser\Serial-Port-Communication-Visual-Studio-Project\Serial_Communication\obj\x86\Debug\Serial_Communication.exe
+C:\Users\Nick Price\OneDrive - CP Automation Ltd\Web\Serial Port Analyser\Serial-Port-Communication-Visual-Studio-Project\Serial_Communication\obj\x86\Debug\Serial_Communication.pdb
+C:\Users\Nick Price\OneDrive - CP Automation Ltd\Web\Serial Port Analyser\Serial-Port-Communication-Visual-Studio-Project\Serial_Communication_2\bin\Debug\Serial_Communication.exe.config
+C:\Users\Nick Price\OneDrive - CP Automation Ltd\Web\Serial Port Analyser\Serial-Port-Communication-Visual-Studio-Project\Serial_Communication_2\bin\Debug\Serial_Communication.exe
+C:\Users\Nick Price\OneDrive - CP Automation Ltd\Web\Serial Port Analyser\Serial-Port-Communication-Visual-Studio-Project\Serial_Communication_2\bin\Debug\Serial_Communication.pdb
+C:\Users\Nick Price\OneDrive - CP Automation Ltd\Web\Serial Port Analyser\Serial-Port-Communication-Visual-Studio-Project\Serial_Communication_2\obj\x86\Debug\Serial_Communication.csprojAssemblyReference.cache
+C:\Users\Nick Price\OneDrive - CP Automation Ltd\Web\Serial Port Analyser\Serial-Port-Communication-Visual-Studio-Project\Serial_Communication_2\obj\x86\Debug\Serial_Communication.Form1.resources
+C:\Users\Nick Price\OneDrive - CP Automation Ltd\Web\Serial Port Analyser\Serial-Port-Communication-Visual-Studio-Project\Serial_Communication_2\obj\x86\Debug\Serial_Communication.Properties.Resources.resources
+C:\Users\Nick Price\OneDrive - CP Automation Ltd\Web\Serial Port Analyser\Serial-Port-Communication-Visual-Studio-Project\Serial_Communication_2\obj\x86\Debug\Serial_Communication.csproj.GenerateResource.cache
+C:\Users\Nick Price\OneDrive - CP Automation Ltd\Web\Serial Port Analyser\Serial-Port-Communication-Visual-Studio-Project\Serial_Communication_2\obj\x86\Debug\Serial_Communication.csproj.CoreCompileInputs.cache
+C:\Users\Nick Price\OneDrive - CP Automation Ltd\Web\Serial Port Analyser\Serial-Port-Communication-Visual-Studio-Project\Serial_Communication_2\obj\x86\Debug\Serial_Communication.exe
+C:\Users\Nick Price\OneDrive - CP Automation Ltd\Web\Serial Port Analyser\Serial-Port-Communication-Visual-Studio-Project\Serial_Communication_2\obj\x86\Debug\Serial_Communication.pdb
