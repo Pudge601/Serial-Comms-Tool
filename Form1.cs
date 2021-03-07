@@ -311,7 +311,7 @@ namespace Serial_Communication
                     byte[] data = HexStringToByteArray(command);
                     ComPort.Write(data, 0, data.Length);
                     Debug.Print("Data Sent");
-                    string txData = string.Join(" ", data);
+                    string txData = string.Join(" ", command);
                     txData = (txData + System.Environment.NewLine);
                     rtxtDataArea.SelectionColor = Color.Blue;
                     this.rtxtDataArea.AppendText(txData.ToUpper());
