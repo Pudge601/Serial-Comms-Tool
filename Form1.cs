@@ -16,6 +16,7 @@ namespace Serial_Communication
     {
     public partial class Form1 : Form
         {
+        static EventWaitHandle mre = new AutoResetEvent(false);
         public Form1()
             {
             InitializeComponent();
@@ -62,6 +63,7 @@ namespace Serial_Communication
                     {
                     //Open Port
                     ComPort.Open();
+                    ComPort.DataReceived += new SerialDataReceivedEventHandler(onDataReceived);
 
                 }
                 catch (UnauthorizedAccessException) { error = true; }
@@ -182,29 +184,6 @@ namespace Serial_Communication
             {
             if (ComPort.IsOpen) ComPort.Close();  //close the port if open when exiting the application.
             }
-
-        //Data recived from the serial port is coming from another thread context than the UI thread.
-        //Instead of reading the content directly in the SerialPortDataReceived, we need to use a delegate.
-        delegate void SetTextCallback(string text);
-        private void SetText(string text)
-        {
-            //invokeRequired required compares the thread ID of the calling thread to the thread of the creating thread.
-            // if these threads are different, it returns true
-            if (this.rtxtDataArea.InvokeRequired)
-            {
-                rtxtDataArea.SelectionColor = Color.Green;    //write text data in Green colour
-                //Debug.WriteLine("Received 2");
-
-                SetTextCallback d = new SetTextCallback(SetText);              
-                this.Invoke(d, new object[] { text });
-            }
-            else
-            {
-                //Debug.WriteLine("Received 1");
-                this.rtxtDataArea.AppendText(text ); 
-            }
-        }
-
         private void btnRefresh_Click(object sender, EventArgs e)
         {
             updatePorts();           //Call this function to update port names
@@ -221,14 +200,14 @@ namespace Serial_Communication
         }
         private string MyDirectory()
         {
-            return Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
+            return Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location); //Find local .exe directory. Used when the file open dialog is called
         }
 
-        private void button2_Click(object sender, EventArgs e)
+        private void button2_Click(object sender, EventArgs e) //Open File
         {
             OpenFileDialog openFileDialog1 = new OpenFileDialog
             {
-                InitialDirectory = MyDirectory(),
+                InitialDirectory = MyDirectory(), //Uses local .exe directory
                 Title = "Browse Text Files",
 
                 CheckFileExists = true,
@@ -261,37 +240,6 @@ namespace Serial_Communication
 
         private void btnFileSend_Click(object sender, EventArgs e)
         {
-            var mre = new AutoResetEvent(false);
-            var buffer = new StringBuilder();
-
-            //Receive
-            ComPort.DataReceived += (s, f) => //Think this is why we receive another empty line every time the send button is clicked
-            {
-                Debug.Print("Data Received");
-                rtxtDataArea.SelectionColor = Color.Green;
-                //Debug.Print("Data Received:");
-                int bytestoreada = ComPort.BytesToRead; //reads 6 bytes here
-                string bytestoreadastring = " " + bytestoreada + " ";
-                //Debug.Print("bytestoreadastring" + bytestoreadastring + ".");
-                byte[] dataa = new byte[bytestoreada]; // buffer to contain results of the read.
-                ComPort.Read(dataa, 0, bytestoreada); //dump com port bytes to dataa
-                string dataalengthstring = " " + dataa.Length + " ";
-                //Debug.Print("dataalength: " + dataalengthstring + ".");
-                string data = ByteArrayToString(dataa);
-                if (data.Length > 0)
-                {
-                    this.rtxtDataArea.AppendText(data.ToUpper());
-                }
-                else
-                {
-                    rtxtDataArea.SelectionColor = Color.Red;
-                    this.rtxtDataArea.AppendText("Blank Messsage Received!");
-                }
-                    //Debug.WriteLine("mre Set");
-                buffer.Clear();
-                mre.Set(); //allow loop to continue
-            };
-
             //Send
             string[] lines = new String[0];
             try
@@ -316,34 +264,57 @@ namespace Serial_Communication
                     rtxtDataArea.SelectionColor = Color.Blue;
                     this.rtxtDataArea.AppendText(txData.ToUpper());
                     
-                    //this is where we block
+                    //this is where we block. Wait for mre to be set in onDataReceived
                     if (!mre.WaitOne(responseTimeout))
                     {
-                        Debug.WriteLine("Did not receive response");
-                        //do something
+                        string noDataReceived = ("Did not receive response" + System.Environment.NewLine);
+                        rtxtDataArea.SelectionColor = Color.Red;
+                        this.rtxtDataArea.AppendText(noDataReceived.ToUpper());
                     }
                 }
                 catch (TimeoutException)
                 {
-                    Debug.WriteLine("Write took longer than expected");
+                    string writeTimeout = ("Write took longer than expected" + System.Environment.NewLine);
+                    rtxtDataArea.SelectionColor = Color.Red;
+                    this.rtxtDataArea.AppendText(writeTimeout.ToUpper());
                 }
                 catch
                 {
-                    Debug.WriteLine("Failed to write to port");
+                    string writeFail = ("Failed to write to port" + System.Environment.NewLine);
+                    rtxtDataArea.SelectionColor = Color.Red;
+                    this.rtxtDataArea.AppendText(writeFail.ToUpper());
                 }
             }
-
-            Console.ReadLine();
-
-
         }
 
-        private void rtxtDataArea_TextChanged(object sender, EventArgs e)
+        private void rtxtDataArea_TextChanged(object sender, EventArgs e) //Makes sure results window scrolls to the bottom of the page
         {
             // set the current caret position to the end
                 rtxtDataArea.SelectionStart = rtxtDataArea.Text.Length;
              // scroll it automatically
                 rtxtDataArea.ScrollToCaret();
+        }
+
+        private void onDataReceived(object sender, SerialDataReceivedEventArgs e)
+        {
+            Debug.Print("Data Received");
+            rtxtDataArea.SelectionColor = Color.Green;
+            int bytestoreada = ComPort.BytesToRead; //reads 6 bytes here
+            string bytestoreadastring = " " + bytestoreada + " ";
+            byte[] dataa = new byte[bytestoreada]; // buffer to contain results of the read.
+            ComPort.Read(dataa, 0, bytestoreada); //dump com port bytes to dataa
+            string dataalengthstring = " " + dataa.Length + " ";
+            string data = ByteArrayToString(dataa);
+            if (data.Length > 0)
+            {
+                this.rtxtDataArea.AppendText(data.ToUpper());
+            }
+            else
+            {
+                rtxtDataArea.SelectionColor = Color.Red;
+                this.rtxtDataArea.AppendText("Blank Messsage Received!");
+            }
+            mre.Set(); //allow loop to continue
         }
     }
 }
