@@ -17,6 +17,11 @@ namespace Serial_Communication
     public partial class Form1 : Form
         {
         static EventWaitHandle mre = new AutoResetEvent(false);
+        public int expectedResponseLength = 0;
+        public int receivedLength = 0;
+        public bool formConnectTrue = false;
+        public string data = "";
+
         public Form1()
             {
             InitializeComponent();
@@ -31,6 +36,7 @@ namespace Serial_Communication
             cmbParity.SelectedIndex = 0;
             cmbDataBits.SelectedIndex = 1;
             cmbStopBits.SelectedIndex = 1;
+            ComPort.DataReceived += new SerialDataReceivedEventHandler(onDataReceived);
         }
         private void updatePorts()
             {
@@ -63,7 +69,7 @@ namespace Serial_Communication
                     {
                     //Open Port
                     ComPort.Open();
-                    ComPort.DataReceived += new SerialDataReceivedEventHandler(onDataReceived);
+                    formConnectTrue = true;
 
                 }
                 catch (UnauthorizedAccessException) { error = true; }
@@ -85,6 +91,7 @@ namespace Serial_Communication
                 btnConnect.Text = "Disconnect";
                 btnSend.Enabled = true;
                 btnFileSend.Enabled = true;
+                formConnectTrue = true;
                 if (!rdText.Checked & !rdHex.Checked)  //if no data mode is selected, then select text mode by default
                     {
                     rdText.Checked = true;
@@ -97,19 +104,24 @@ namespace Serial_Communication
               // Call this function to close the port.
         private void disconnect()
             {
-            ComPort.Close();
+            if (ComPort.IsOpen)
+            {
+                ComPort.Close();
+            }
             btnConnect.Text = "Connect";
             btnSend.Enabled = false;
             btnFileSend.Enabled = false;
             groupBox1.Enabled = true;
-            
+            formConnectTrue = false;
+
+
             }
               //whenever the connect button is clicked, it will check if the port is already open, call the disconnect function.
               // if the port is closed, call the connect function.
         private void btnConnect_Click(object sender, EventArgs e)
                                   
             {
-            if (ComPort.IsOpen)
+            if (formConnectTrue == true)
                 {
                 disconnect();
                 }
@@ -119,50 +131,14 @@ namespace Serial_Communication
                 }
             }
 
+        //Clear tx/rx window
         private void btnClear_Click(object sender, EventArgs e)
             {
             //Clear the screen
             rtxtDataArea.Clear();
-            txtSend.Clear();
             }
-        // Function to send data to the serial port
-        private void sendData(string writeData)
-            {
-            bool error = false;
-            if (rdText.Checked == true)        //if text mode is selected, send data as tex
-                {
-                // Send the user's text straight out the port 
-                ComPort.Write(writeData);
-               
-                // Show in the terminal window 
-                rtxtDataArea.ForeColor = Color.Green;    //write sent text data in green colour              
-                txtSend.Clear();                       //clear screen after sending data
 
-                }
-            else                    //if Hex mode is selected, send data in hexadecimal
-                {
-                try
-                    {
-                    // Convert the user's string of hex digits (example: E1 FF 1B) to a byte array
-                    byte[] data = HexStringToByteArray(writeData);
 
-                    // Send the binary data out the port
-                  ComPort.Write(data, 0, data.Length);
-
-                    // Show the hex digits on in the terminal window
-                  rtxtDataArea.SelectionColor = Color.Blue;   //write Hex data in Blue
-                  rtxtDataArea.AppendText(writeData.ToUpper() + "\n");
-                    }
-                catch (FormatException) { error = true; }
-                    
-                    // Inform the user if the hex string was not properly formatted
-                    catch (ArgumentException) { error = true; }
-
-                if (error) MessageBox.Show(this, "Not properly formatted hex string: " + writeData + "\n" + "example: E1 FF 1B", "Format Error", MessageBoxButtons.OK, MessageBoxIcon.Stop);
-                                                      
-                }
-            return;
-            }
                //Convert a string of hex digits (example: E1 FF 1B) to a byte array. 
                //The string containing the hex digits (with or without spaces)
               //Returns an array of bytes. </returns>
@@ -174,11 +150,15 @@ namespace Serial_Communication
                 buffer[i / 2] = (byte)Convert.ToByte(s.Substring(i, 2), 16);
             return buffer;
             }
-        
-        private void btnSend_Click(object sender, EventArgs e)
-            {
-            sendData(txtSend.Text);
-            }
+
+        private void rtxtDataArea_TextChanged(object sender, EventArgs e) //Makes sure results window scrolls to the bottom of the page
+        {
+            // set the current caret position to the end
+            rtxtDataArea.SelectionStart = rtxtDataArea.Text.Length;
+            // scroll it automatically
+            rtxtDataArea.ScrollToCaret();
+        }
+
             //This event will be raised when the form is closing.
         private void Form1_FormClosing(object sender, FormClosingEventArgs e)
             {
@@ -233,12 +213,65 @@ namespace Serial_Communication
             StringBuilder hex = new StringBuilder(ba.Length * 2);
             foreach (byte b in ba)
                 hex.AppendFormat("{0:x2} ", b);
-                hex.Append(Environment.NewLine);
             return hex.ToString();
         }
 
+        
+        // Function to send data to the serial port
+        private void sendData(string writeData, System.TimeSpan responseTimeout)
+        {
+            try
+            {
+                byte[] data = HexStringToByteArray(writeData);
+                expectedResponseLength = data.Length;
+                Debug.WriteLine("Expected Length: " + expectedResponseLength);
+                ComPort.Write(data, 0, data.Length);
+                Debug.Print("Data Sent");
+                string txData = string.Join(" ", writeData);
+                txData = (txData + System.Environment.NewLine);
+                rtxtDataArea.SelectionColor = Color.Blue;
+                this.rtxtDataArea.AppendText(txData.ToUpper());
 
-        private void btnFileSend_Click(object sender, EventArgs e)
+                //this is where we block. Wait for mre to be set in onDataReceived
+                //mre.WaitOne(responseTimeout);
+                if (!mre.WaitOne(responseTimeout))
+                {
+                    string noDataReceived = ("Did not receive response" + System.Environment.NewLine);
+                    rtxtDataArea.SelectionColor = Color.Red;
+                    this.rtxtDataArea.AppendText(noDataReceived.ToUpper());
+                }
+                else {
+                    Debug.Print("mre received in send");
+                }
+                Debug.Print("was mre received in send?");
+
+            }
+            catch (TimeoutException)
+            {
+                string writeTimeout = ("Write took longer than expected" + System.Environment.NewLine);
+                rtxtDataArea.SelectionColor = Color.Red;
+                this.rtxtDataArea.AppendText(writeTimeout.ToUpper());
+            }
+            catch
+            {
+                string writeFail = ("Failed to write to port" + System.Environment.NewLine);
+                rtxtDataArea.SelectionColor = Color.Red;
+                this.rtxtDataArea.AppendText(writeFail.ToUpper());
+            }
+            return;
+        }
+        
+
+        //Send one line from text box
+        private void btnSend_Click(object sender, EventArgs e)
+        {
+            var singleResponseTimeout = TimeSpan.FromSeconds(1);
+            sendData(txtSend.Text, singleResponseTimeout);
+        }
+
+
+        //Send all lines from file
+        private void btnFileSend_Click(object sender, EventArgs e) 
         {
             //Send
             string[] lines = new String[0];
@@ -250,71 +283,55 @@ namespace Serial_Communication
             {
                 MessageBox.Show(this, "No File Open", "File Error", MessageBoxButtons.OK, MessageBoxIcon.Stop);
             }
-            var responseTimeout = TimeSpan.FromSeconds(1);
+            var multiResponseTimeout = TimeSpan.FromSeconds(1);
 
             foreach (var command in lines)
             {
-                try
-                {
-                    byte[] data = HexStringToByteArray(command);
-                    ComPort.Write(data, 0, data.Length);
-                    Debug.Print("Data Sent");
-                    string txData = string.Join(" ", command);
-                    txData = (txData + System.Environment.NewLine);
-                    rtxtDataArea.SelectionColor = Color.Blue;
-                    this.rtxtDataArea.AppendText(txData.ToUpper());
-                    
-                    //this is where we block. Wait for mre to be set in onDataReceived
-                    if (!mre.WaitOne(responseTimeout))
-                    {
-                        string noDataReceived = ("Did not receive response" + System.Environment.NewLine);
-                        rtxtDataArea.SelectionColor = Color.Red;
-                        this.rtxtDataArea.AppendText(noDataReceived.ToUpper());
-                    }
-                }
-                catch (TimeoutException)
-                {
-                    string writeTimeout = ("Write took longer than expected" + System.Environment.NewLine);
-                    rtxtDataArea.SelectionColor = Color.Red;
-                    this.rtxtDataArea.AppendText(writeTimeout.ToUpper());
-                }
-                catch
-                {
-                    string writeFail = ("Failed to write to port" + System.Environment.NewLine);
-                    rtxtDataArea.SelectionColor = Color.Red;
-                    this.rtxtDataArea.AppendText(writeFail.ToUpper());
-                }
+                sendData(command, multiResponseTimeout);
             }
         }
 
-        private void rtxtDataArea_TextChanged(object sender, EventArgs e) //Makes sure results window scrolls to the bottom of the page
-        {
-            // set the current caret position to the end
-                rtxtDataArea.SelectionStart = rtxtDataArea.Text.Length;
-             // scroll it automatically
-                rtxtDataArea.ScrollToCaret();
-        }
 
+
+
+
+
+        //Data Received
         private void onDataReceived(object sender, SerialDataReceivedEventArgs e)
         {
             Debug.Print("Data Received");
             rtxtDataArea.SelectionColor = Color.Green;
             int bytestoreada = ComPort.BytesToRead; //reads 6 bytes here
-            string bytestoreadastring = " " + bytestoreada + " ";
+            receivedLength = receivedLength + bytestoreada;
+
+            Debug.WriteLine("Bytes Received this time " + bytestoreada + ". Bytes received since last mre " + receivedLength + " .(Expected Response Length = " + expectedResponseLength + ")");
             byte[] dataa = new byte[bytestoreada]; // buffer to contain results of the read.
             ComPort.Read(dataa, 0, bytestoreada); //dump com port bytes to dataa
-            string dataalengthstring = " " + dataa.Length + " ";
-            string data = ByteArrayToString(dataa);
-            if (data.Length > 0)
+            if (bytestoreada < expectedResponseLength)
             {
-                this.rtxtDataArea.AppendText(data.ToUpper());
+                Debug.WriteLine("Concatenating Data");
+                data = data + ByteArrayToString(dataa);
             }
             else
             {
-                rtxtDataArea.SelectionColor = Color.Red;
-                this.rtxtDataArea.AppendText("Blank Messsage Received!");
+                data = ByteArrayToString(dataa);
             }
-            mre.Set(); //allow loop to continue
+            Debug.WriteLine("data.length " + data.Length);
+            if (receivedLength < (expectedResponseLength))
+            {
+                rtxtDataArea.SelectionColor = Color.Red;
+                Debug.WriteLine("Short Messsage Received!");
+            }
+            else
+            {
+                Debug.WriteLine("Print Data (" + data.Length + "bytes)");
+                data = (data + Environment.NewLine);
+                this.rtxtDataArea.AppendText(data.ToUpper());
+                receivedLength = 0;
+                data = "";
+                mre.Set(); //allow loop to continue
+                Debug.WriteLine("mre Set");
+            }
         }
     }
 }
