@@ -286,6 +286,14 @@ namespace Serial_Communication
             {
                 string writeData = sendDataQueue.Take();
                 sendData(writeData);
+
+                // consume everything else waiting in the queue
+                while (sendDataQueue.TryTake(out writeData))
+                {
+                    sendData(writeData);
+                }
+                // once we have cleared the queue, re-enable the send buttons
+                setSendBtnsEnabled(true);
             }
         }
         
@@ -293,6 +301,7 @@ namespace Serial_Communication
         //Send one line from text box
         private void btnSend_Click(object sender, EventArgs e)
         {
+            setSendBtnsEnabled(false);
             sendDataQueue.Add(txtSend.Text);
         }
 
@@ -300,6 +309,7 @@ namespace Serial_Communication
         //Send all lines from file
         private void btnFileSend_Click(object sender, EventArgs e) 
         {
+            setSendBtnsEnabled(false);
             //Send
             string[] lines = new String[0];
             try
@@ -317,7 +327,11 @@ namespace Serial_Communication
             }
         }
 
-
+        private void setSendBtnsEnabled(bool enabled)
+        {
+            btnSend.Enabled = enabled;
+            btnFileSend.Enabled = enabled;
+        }
 
 
 
