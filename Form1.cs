@@ -1,9 +1,7 @@
 ﻿using System;
-using System.Collections.Generic;
+using System.Collections.Concurrent;
 using System.ComponentModel;
-using System.Data;
 using System.Drawing;
-using System.Linq;
 using System.Text;
 using System.Windows.Forms;
 using System.IO.Ports;  //This is a namespace that contains the SerialPort class
@@ -11,6 +9,7 @@ using System.Diagnostics;
 using System.Reflection;
 using System.IO;
 using System.Threading;
+using System.Threading.Tasks;
 
 namespace Serial_Communication
     {
@@ -21,10 +20,14 @@ namespace Serial_Communication
         public int receivedLength = 0;
         public bool formConnectTrue = false;
         public string data = "";
+        private TimeSpan responseTimeout = TimeSpan.FromSeconds(1);
+        private BlockingCollection<string> sendDataQueue = new BlockingCollection<string>();
+        private bool stop = false;
 
         public Form1()
             {
             InitializeComponent();
+            this.FormClosed += new FormClosedEventHandler(this.Form1_FormClosed);
         }
 
         private void Form1_Load(object sender, EventArgs e) 
@@ -37,6 +40,12 @@ namespace Serial_Communication
             cmbDataBits.SelectedIndex = 1;
             cmbStopBits.SelectedIndex = 1;
             ComPort.DataReceived += new SerialDataReceivedEventHandler(onDataReceived);
+            Task.Run(sendDataLoop);
+        }
+        private void Form1_FormClosed(object sender, FormClosedEventArgs e)
+        {
+            Debug.WriteLine("FormClosed");
+            stop = true;
         }
         private void updatePorts()
             {
@@ -216,9 +225,23 @@ namespace Serial_Communication
             return hex.ToString();
         }
 
-        
+        delegate void AppendTextCallback(string message, Color color);
+        private void appendText(string message, Color color)
+        {
+            if (this.rtxtDataArea.InvokeRequired)
+            {
+                this.Invoke(new AppendTextCallback(appendText), message, color);
+            }
+            else
+            {
+                rtxtDataArea.SelectionColor = color;
+                rtxtDataArea.AppendText(message);
+            }
+        }
+
+
         // Function to send data to the serial port
-        private void sendData(string writeData, System.TimeSpan responseTimeout)
+        private void sendData(string writeData)
         {
             try
             {
@@ -227,18 +250,16 @@ namespace Serial_Communication
                 Debug.WriteLine("Expected Length: " + expectedResponseLength);
                 ComPort.Write(data, 0, data.Length);
                 Debug.Print("Data Sent");
+
                 string txData = string.Join(" ", writeData);
-                txData = (txData + System.Environment.NewLine);
-                rtxtDataArea.SelectionColor = Color.Blue;
-                this.rtxtDataArea.AppendText(txData.ToUpper());
+                this.appendText(txData.ToUpper() + System.Environment.NewLine, Color.Blue);
 
                 //this is where we block. Wait for mre to be set in onDataReceived
                 //mre.WaitOne(responseTimeout);
                 if (!mre.WaitOne(responseTimeout))
                 {
                     string noDataReceived = ("Did not receive response" + System.Environment.NewLine);
-                    rtxtDataArea.SelectionColor = Color.Red;
-                    this.rtxtDataArea.AppendText(noDataReceived.ToUpper());
+                    this.appendText(noDataReceived.ToUpper(), Color.Red);
                 }
                 else {
                     Debug.Print("mre received in send");
@@ -249,24 +270,30 @@ namespace Serial_Communication
             catch (TimeoutException)
             {
                 string writeTimeout = ("Write took longer than expected" + System.Environment.NewLine);
-                rtxtDataArea.SelectionColor = Color.Red;
-                this.rtxtDataArea.AppendText(writeTimeout.ToUpper());
+                this.appendText(writeTimeout.ToUpper(), Color.Red);
             }
             catch
             {
                 string writeFail = ("Failed to write to port" + System.Environment.NewLine);
-                rtxtDataArea.SelectionColor = Color.Red;
-                this.rtxtDataArea.AppendText(writeFail.ToUpper());
+                this.appendText(writeFail.ToUpper(), Color.Red);
             }
             return;
+        }
+
+        private void sendDataLoop()
+        {
+            while (!stop)
+            {
+                string writeData = sendDataQueue.Take();
+                sendData(writeData);
+            }
         }
         
 
         //Send one line from text box
         private void btnSend_Click(object sender, EventArgs e)
         {
-            var singleResponseTimeout = TimeSpan.FromSeconds(1);
-            sendData(txtSend.Text, singleResponseTimeout);
+            sendDataQueue.Add(txtSend.Text);
         }
 
 
@@ -283,11 +310,10 @@ namespace Serial_Communication
             {
                 MessageBox.Show(this, "No File Open", "File Error", MessageBoxButtons.OK, MessageBoxIcon.Stop);
             }
-            var multiResponseTimeout = TimeSpan.FromSeconds(1);
 
             foreach (var command in lines)
             {
-                sendData(command, multiResponseTimeout);
+                sendDataQueue.Add(command);
             }
         }
 
